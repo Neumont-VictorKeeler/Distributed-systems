@@ -1,5 +1,6 @@
 # Video Game Trading API
 This Read Me is AI generated.
+I See Why its not always implemented this sucked to do.
 A RESTful API for trading video games, built with FastAPI and SQLAlchemy. This API is compliant with Richardson Maturity Model Level 3 (HATEOAS).
 
 ## Features
