@@ -1,0 +1,458 @@
+{
+	"info": {
+		"name": "Video Game Trading API",
+		"description": "RESTful API for trading video games with HATEOAS support (Richardson Maturity Model Level 3)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Root",
+			"item": [
+				{
+					"name": "Get API Root",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "Get root endpoint with HATEOAS links to all available resources"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"securepassword123\",\n  \"street_address\": \"123 Main Street, Springfield, IL 62701\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Register a new user with name, email, password, and street address"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1"]
+						},
+						"description": "Get a specific user by their ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users?skip=0&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["users"],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get all users with pagination support"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Smith\",\n  \"street_address\": \"456 Oak Avenue, Springfield, IL 62702\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1"]
+						},
+						"description": "Update user's name and street address (email cannot be changed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User's Games",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/1/games?skip=0&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1", "games"],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get all games owned by a specific user"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Games",
+			"item": [
+				{
+					"name": "Create Game",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"The Legend of Zelda\",\n  \"publisher\": \"Nintendo\",\n  \"year_published\": 1986,\n  \"gaming_system\": \"NES\",\n  \"condition\": \"good\",\n  \"previous_owners\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/games?owner_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["games"],
+							"query": [
+								{
+									"key": "owner_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Create a new video game listing. Condition must be: mint, good, fair, or poor"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/games/1",
+							"host": ["{{base_url}}"],
+							"path": ["games", "1"]
+						},
+						"description": "Get a specific game by its ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Games",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/games?skip=0&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["games"],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get all games with pagination support"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Game",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"The Legend of Zelda: Collector's Edition\",\n  \"condition\": \"mint\",\n  \"previous_owners\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/games/1",
+							"host": ["{{base_url}}"],
+							"path": ["games", "1"]
+						},
+						"description": "Update game details (all fields optional)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Game",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/games/1",
+							"host": ["{{base_url}}"],
+							"path": ["games", "1"]
+						},
+						"description": "Delete a game listing"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Example Requests",
+			"item": [
+				{
+					"name": "Create Game - Mint Condition",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Super Mario Bros\",\n  \"publisher\": \"Nintendo\",\n  \"year_published\": 1985,\n  \"gaming_system\": \"NES\",\n  \"condition\": \"mint\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/games?owner_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["games"],
+							"query": [
+								{
+									"key": "owner_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Example: Create a game in mint condition (no previous owners)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Game - Fair Condition",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Sonic the Hedgehog\",\n  \"publisher\": \"Sega\",\n  \"year_published\": 1991,\n  \"gaming_system\": \"Genesis\",\n  \"condition\": \"fair\",\n  \"previous_owners\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/games?owner_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["games"],
+							"query": [
+								{
+									"key": "owner_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Example: Create a game in fair condition with multiple previous owners"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Game - Poor Condition",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Pac-Man\",\n  \"publisher\": \"Namco\",\n  \"year_published\": 1980,\n  \"gaming_system\": \"Atari 2600\",\n  \"condition\": \"poor\",\n  \"previous_owners\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/games?owner_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["games"],
+							"query": [
+								{
+									"key": "owner_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Example: Create a game in poor condition"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Second User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"password\": \"password456\",\n  \"street_address\": \"789 Elm Street, Chicago, IL 60601\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Example: Register a second user"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Error Cases",
+			"item": [
+				{
+					"name": "Duplicate Email (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Another User\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password\",\n  \"street_address\": \"123 Test St\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Error: Attempting to register with an email that already exists"
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Game Condition (422)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Game\",\n  \"publisher\": \"Test Publisher\",\n  \"year_published\": 2020,\n  \"gaming_system\": \"PC\",\n  \"condition\": \"excellent\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/games?owner_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["games"],
+							"query": [
+								{
+									"key": "owner_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Error: Invalid condition value (must be mint, good, fair, or poor)"
+					},
+					"response": []
+				},
+				{
+					"name": "User Not Found (404)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/9999",
+							"host": ["{{base_url}}"],
+							"path": ["users", "9999"]
+						},
+						"description": "Error: Attempting to get a user that doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Game Not Found (404)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/games/9999",
+							"host": ["{{base_url}}"],
+							"path": ["games", "9999"]
+						},
+						"description": "Error: Attempting to get a game that doesn't exist"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}
+

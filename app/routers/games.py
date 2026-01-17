@@ -77,35 +77,6 @@ def get_games(
     return collection
 
 
-@router.get("/users/{user_id}/games", response_model=VideoGameCollection)
-def get_user_games(
-    user_id: int,
-    request: Request,
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-
-    games = db.query(VideoGame).filter(VideoGame.owner_id == user_id).offset(skip).limit(limit).all()
-
-    game_responses = []
-    for game in games:
-        response = VideoGameResponse.model_validate(game)
-        response.links = add_game_links(request, game.id, game.owner_id, is_owner=True)
-        game_responses.append(response)
-
-    collection = VideoGameCollection(items=game_responses)
-    collection.links = add_collection_links(request, f"/users/{user_id}/games")
-
-    return collection
-
-
 @router.put("/{game_id}", response_model=VideoGameResponse)
 def update_game(
     game_id: int,
