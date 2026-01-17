@@ -1,0 +1,120 @@
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import SQLAlchemyError
+from app.routers import users, games
+from app.database import engine, Base
+from app.schemas import ErrorResponse
+
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title="Video Game Trading API",
+    description="A RESTful API for trading video games with HATEOAS support (REST Level 3)",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(users.router)
+app.include_router(games.router)
+
+
+@app.get("/", tags=["root"])
+def root(request: Request):
+    base_url = str(request.base_url).rstrip('/')
+    return {
+        "message": "Video Game Trading API",
+        "version": "1.0.0",
+        "links": {
+            "self": {
+                "rel": "self",
+                "href": f"{base_url}/",
+                "method": "GET"
+            },
+            "register": {
+                "rel": "register",
+                "href": f"{base_url}/users",
+                "method": "POST"
+            },
+            "users": {
+                "rel": "users",
+                "href": f"{base_url}/users",
+                "method": "GET"
+            },
+            "games": {
+                "rel": "games",
+                "href": f"{base_url}/games",
+                "method": "GET"
+            },
+            "documentation": {
+                "rel": "documentation",
+                "href": f"{base_url}/docs",
+                "method": "GET"
+            },
+            "openapi": {
+                "rel": "openapi",
+                "href": f"{base_url}/openapi.json",
+                "method": "GET"
+            }
+        }
+    }
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for error in exc.errors():
+        errors.append({
+            "field": " -> ".join(str(x) for x in error["loc"]),
+            "message": error["msg"],
+            "type": error["type"]
+        })
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "error": "Validation Error",
+            "detail": "Request validation failed",
+            "status_code": status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "errors": errors
+        }
+    )
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+    
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "Database Error",
+            "detail": "An error occurred while processing your request",
+            "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    import traceback
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "Internal Server Error",
+            "detail": str(exc),
+            "traceback": traceback.format_exc(),
+            "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR
+        }
+    )
+
