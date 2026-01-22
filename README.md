@@ -77,6 +77,45 @@ Once the server is running, visit:
 - previous_owners (optional)
 - owner_id (foreign key to User)
 
+## Docker
+
+### Quick Start with Docker
+
+```bash
+# Build the image
+docker build -t videogame-trading-api .
+
+# Run the container
+docker run -d --name videogame-api -p 8000:8000 videogame-trading-api
+
+# View logs
+docker logs -f videogame-api
+
+# Stop and remove
+docker stop videogame-api
+docker rm videogame-api
+```
+
+### Using Docker Compose
+
+```bash
+# Start the application
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the application
+docker-compose down
+```
+
+### Access the API
+
+Once the container is running:
+- **API Root**: http://localhost:8000/
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
 ## Testing
 
 Import the `postman_collection.json` file into Postman to test all API endpoints.
