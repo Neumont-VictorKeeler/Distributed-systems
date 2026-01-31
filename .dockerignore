@@ -37,6 +37,7 @@ Dockerfile
 .dockerignore
 docker-compose.yml
 .env.example
+nginx/
 
 *.md
 README.md

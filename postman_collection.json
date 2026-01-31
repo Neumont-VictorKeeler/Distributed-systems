@@ -445,12 +445,201 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Trade Offers",
+			"item": [
+				{
+					"name": "Create Trade Offer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"offered_game_id\": 1,\n  \"requested_game_id\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/trade-offers?offerer_id=1&receiver_id=2",
+							"host": ["{{base_url}}"],
+							"path": ["trade-offers"],
+							"query": [
+								{
+									"key": "offerer_id",
+									"value": "1"
+								},
+								{
+									"key": "receiver_id",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Create a new trade offer. User offers their game in exchange for another user's game."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Offer by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/trade-offers/1",
+							"host": ["{{base_url}}"],
+							"path": ["trade-offers", "1"]
+						},
+						"description": "Get a specific trade offer by its ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Trade Offers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/trade-offers?skip=0&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["trade-offers"],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "pending",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all trade offers with pagination. Optional status filter (pending, accepted, rejected, cancelled)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Offers Sent by User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/trade-offers/user/1/sent?skip=0&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["trade-offers", "user", "1", "sent"],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get all trade offers sent by a specific user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Offers Received by User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/trade-offers/user/2/received?skip=0&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["trade-offers", "user", "2", "received"],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get all trade offers received by a specific user"
+					},
+					"response": []
+				},
+				{
+					"name": "Accept Trade Offer",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/trade-offers/1/accept?user_id=2",
+							"host": ["{{base_url}}"],
+							"path": ["trade-offers", "1", "accept"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Accept a trade offer. Only the receiver can accept."
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Trade Offer",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/trade-offers/1/reject?user_id=2",
+							"host": ["{{base_url}}"],
+							"path": ["trade-offers", "1", "reject"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Reject a trade offer. Only the receiver can reject."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Trade Offer",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/trade-offers/1/cancel?user_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["trade-offers", "1", "cancel"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Cancel a trade offer. Only the offerer can cancel."
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:8000",
+			"value": "http://localhost:8080",
 			"type": "string"
 		}
 	]

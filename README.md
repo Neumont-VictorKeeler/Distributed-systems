@@ -61,6 +61,16 @@ Once the server is running, visit:
 - `PUT /games/{game_id}` - Update game listing
 - `DELETE /games/{game_id}` - Delete game listing
 
+### Trade Offers
+- `POST /trade-offers` - Create a new trade offer
+- `GET /trade-offers/{trade_offer_id}` - Get trade offer by ID
+- `GET /trade-offers` - Get all trade offers (with optional status filter)
+- `GET /trade-offers/user/{user_id}/sent` - Get trade offers sent by a user
+- `GET /trade-offers/user/{user_id}/received` - Get trade offers received by a user
+- `PUT /trade-offers/{trade_offer_id}/accept` - Accept a trade offer
+- `PUT /trade-offers/{trade_offer_id}/reject` - Reject a trade offer
+- `PUT /trade-offers/{trade_offer_id}/cancel` - Cancel a trade offer
+
 ## Data Models
 
 ### User
@@ -78,44 +88,71 @@ Once the server is running, visit:
 - previous_owners (optional)
 - owner_id (foreign key to User)
 
+### Trade Offer
+- offered_game_id (foreign key to VideoGame)
+- requested_game_id (foreign key to VideoGame)
+- offerer_id (foreign key to User)
+- receiver_id (foreign key to User)
+- status (pending, accepted, rejected, cancelled)
+- created_at
+- updated_at
+
 ## Docker
 
-### Quick Start with Docker
+### Multi-Container Deployment Architecture
+
+This API is deployed using a **multi-container setup** with:
+- **2 API instances** (api1 and api2) running the FastAPI application
+- **NGINX load balancer** distributing traffic using round-robin algorithm
+- **Shared SQLite database** volume for data persistence
+
+### Quick Start with Docker Compose
 
 ```bash
-# Build the image
-docker build -t videogame-trading-api .
+# Start all services (2 API instances + NGINX)
+docker-compose up --build -d
 
-# Run the container
-docker run -d --name videogame-api -p 8000:8000 videogame-trading-api
-
-# View logs
-docker logs -f videogame-api
-
-# Stop and remove
-docker stop videogame-api
-docker rm videogame-api
-```
-
-### Using Docker Compose
-
-```bash
-# Start the application
-docker-compose up -d
-
-# View logs
+# View logs from all services
 docker-compose logs -f
 
-# Stop the application
+# View logs from specific service
+docker-compose logs -f api1
+docker-compose logs -f api2
+docker-compose logs -f nginx
+
+# Stop all services
 docker-compose down
 ```
 
 ### Access the API
 
-Once the container is running:
-- **API Root**: http://localhost:8000/
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+Once the containers are running:
+- **Load Balancer**: http://localhost:8080/ (NGINX distributes to api1 or api2)
+- **Swagger UI**: http://localhost:8080/docs
+- **ReDoc**: http://localhost:8080/redoc
+- **Health Check**: http://localhost:8080/health
+
+### Verify Load Distribution
+
+Each API response includes an `X-Instance-Name` header showing which instance handled the request:
+```bash
+# Make multiple requests and check which instance responds
+curl -I http://localhost:8080/
+# Look for: X-Instance-Name: API-1 or API-2
+```
+
+### Single Container Mode (Development)
+
+For development, you can run a single instance:
+```bash
+# Build the image
+docker build -t videogame-trading-api .
+
+# Run single container
+docker run -d --name videogame-api -p 8000:8000 videogame-trading-api
+
+# Access at http://localhost:8000/
+```
 
 ## Testing
 

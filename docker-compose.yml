@@ -1,21 +1,20 @@
 version: '3.8'
 
 services:
-  api:
+  api1:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: videogame-trading-api
-    ports:
-      - "8000:8000"
+    container_name: videogame-api-1
     environment:
-      - DATABASE_URL=sqlite:///./videogame_trading.db
+      - DATABASE_URL=sqlite:////data/videogame_trading.db
       - API_HOST=0.0.0.0
       - API_PORT=8000
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - INSTANCE_NAME=API-1
     volumes:
-      - ./videogame_trading.db:/app/videogame_trading.db
+      - shared-db:/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
@@ -25,6 +24,53 @@ services:
       start_period: 5s
     networks:
       - app-network
+
+  api2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: videogame-api-2
+    environment:
+      - DATABASE_URL=sqlite:////data/videogame_trading.db
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - INSTANCE_NAME=API-2
+    volumes:
+      - shared-db:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - app-network
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: videogame-nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - api1
+      - api2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - app-network
+
+volumes:
+  shared-db:
 
 networks:
   app-network:

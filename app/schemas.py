@@ -1,9 +1,9 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, List, Dict, Any
-from app.models import GameCondition
+from app.models import GameCondition, TradeOfferStatus
+from datetime import datetime
 
 
-# User Schemas
 class UserBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
@@ -26,7 +26,6 @@ class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# Video Game Schemas
 class VideoGameBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     publisher: str = Field(..., min_length=1, max_length=100)
@@ -57,7 +56,6 @@ class VideoGameResponse(VideoGameBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# Token Schemas
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -68,7 +66,6 @@ class TokenData(BaseModel):
     email: Optional[str] = None
 
 
-# Collection Response with HATEOAS
 class VideoGameCollection(BaseModel):
     items: List[VideoGameResponse]
     links: Dict[str, Any] = {}
@@ -79,7 +76,32 @@ class UserCollection(BaseModel):
     links: Dict[str, Any] = {}
 
 
-# Error Response
+class TradeOfferBase(BaseModel):
+    offered_game_id: int
+    requested_game_id: int
+
+
+class TradeOfferCreate(TradeOfferBase):
+    pass
+
+
+class TradeOfferResponse(TradeOfferBase):
+    id: int
+    offerer_id: int
+    receiver_id: int
+    status: TradeOfferStatus
+    created_at: datetime
+    updated_at: datetime
+    links: Dict[str, Any] = {}
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TradeOfferCollection(BaseModel):
+    items: List[TradeOfferResponse]
+    links: Dict[str, Any] = {}
+
+
 class ErrorResponse(BaseModel):
     error: str
     detail: str

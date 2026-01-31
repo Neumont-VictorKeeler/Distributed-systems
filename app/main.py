@@ -3,9 +3,19 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
-from app.routers import users, games
+from app.routers import users, games, trade_offers
 from app.database import engine, Base
 from app.schemas import ErrorResponse
+import os
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+INSTANCE_NAME = os.getenv("INSTANCE_NAME", "UNKNOWN")
 
 Base.metadata.create_all(bind=engine)
 
@@ -26,8 +36,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"[{INSTANCE_NAME}] {request.method} {request.url.path}")
+    response = await call_next(request)
+    logger.info(f"[{INSTANCE_NAME}] {request.method} {request.url.path} - Status: {response.status_code}")
+    response.headers["X-Instance-Name"] = INSTANCE_NAME
+    return response
+
+
 app.include_router(users.router)
 app.include_router(games.router)
+app.include_router(trade_offers.router)
 
 
 @app.get("/", tags=["root"])
@@ -36,6 +57,7 @@ def root(request: Request):
     return {
         "message": "Video Game Trading API",
         "version": "1.0.0",
+        "instance": INSTANCE_NAME,
         "links": {
             "self": {
                 "rel": "self",
@@ -55,6 +77,11 @@ def root(request: Request):
             "games": {
                 "rel": "games",
                 "href": f"{base_url}/games",
+                "method": "GET"
+            },
+            "trade_offers": {
+                "rel": "trade_offers",
+                "href": f"{base_url}/trade-offers",
                 "method": "GET"
             },
             "documentation": {
