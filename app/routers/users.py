@@ -1,12 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List
+from pydantic import BaseModel
 from app.database import get_db
 from app.models import User, VideoGame
 from app.schemas import UserCreate, UserUpdate, UserResponse, UserCollection, VideoGameResponse, VideoGameCollection
 from app.hateoas import add_user_links, add_collection_links, add_game_links
+from app.services.kafka_producer import notification_producer
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+class PasswordChange(BaseModel):
+    new_password: str
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -128,4 +134,33 @@ def get_user_games(
     collection.links = add_collection_links(request, f"/users/{user_id}/games")
 
     return collection
+
+
+@router.put("/{user_id}/password", response_model=UserResponse)
+def change_password(
+    user_id: int,
+    password_change: PasswordChange,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    user.hashed_password = password_change.new_password
+    db.commit()
+    db.refresh(user)
+
+    notification_producer.send_notification("password_changed", {
+        "user_email": user.email,
+        "user_name": user.name
+    })
+
+    response = UserResponse.model_validate(user)
+    response.links = add_user_links(request, user_id, is_owner=True)
+
+    return response
 

@@ -5,8 +5,11 @@ A RESTful API for trading video games, built with FastAPI and SQLAlchemy. This A
 
 ## Features
 
-- **User Management**: Self-registration, profile updates
+- **User Management**: Self-registration, profile updates, password changes
 - **Video Game Listings**: Create, read, update, and delete game listings
+- **Trade Offers**: Propose, accept, reject, and cancel game trades
+- **Email Notifications**: Asynchronous email notifications via Kafka
+- **Multi-Container Deployment**: Load-balanced API with NGINX
 - **HATEOAS Support**: All responses include hypermedia links
 - **OpenAPI Documentation**: Auto-generated interactive API docs
 - **SQLite Database**: Lightweight relational database for data persistence
@@ -154,6 +157,71 @@ docker run -d --name videogame-api -p 8000:8000 videogame-trading-api
 # Access at http://localhost:8000/
 ```
 
+## Email Notification System
+
+### Architecture
+
+The API uses Apache Kafka for asynchronous email notifications:
+- **Kafka Broker**: Message queue for notification events
+- **API Producers**: API instances send notification events to Kafka
+- **Email Consumer**: Separate service consumes events and sends emails
+
+### Events Triggering Notifications
+
+| Event | Recipients | Description |
+|-------|-----------|-------------|
+| Password Changed | User | Notifies user when their password is changed |
+| Trade Offer Created | Offerer, Receiver | Notifies both parties when a trade offer is created |
+| Trade Offer Accepted | Offerer, Receiver | Notifies both parties when a trade offer is accepted |
+| Trade Offer Rejected | Offerer, Receiver | Notifies both parties when a trade offer is rejected |
+
+### Email Configuration
+
+To enable email sending, configure SMTP settings in your `.env` file:
+
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+FROM_EMAIL=noreply@videogametrading.com
+```
+
+**Note**: If SMTP credentials are not configured, the email service will log the email content instead of sending it.
+
+### Kafka Configuration
+
+Kafka is automatically configured in docker-compose.yml:
+- **Bootstrap Servers**: `kafka:9092`
+- **Topic**: `email-notifications`
+- **Consumer Group**: `email-notification-group`
+
+### Testing Notifications
+
+1. **Change Password**:
+```bash
+curl -X PUT http://localhost:8080/users/1/password \
+  -H "Content-Type: application/json" \
+  -d '{"new_password": "newpassword123"}'
+```
+
+2. **Create Trade Offer**:
+```bash
+curl -X POST http://localhost:8080/trade-offers \
+  -H "Content-Type: application/json" \
+  -d '{"offered_game_id": 1, "requested_game_id": 2}'
+```
+
+3. **Accept Trade Offer**:
+```bash
+curl -X PUT http://localhost:8080/trade-offers/1/accept
+```
+
+4. **View Email Service Logs**:
+```bash
+docker-compose logs -f email-service
+```
+
 ## Testing
 
 Import the `postman_collection.json` file into Postman to test all API endpoints.
@@ -170,9 +238,20 @@ Import the `postman_collection.json` file into Postman to test all API endpoints
 │   ├── database.py       # Database configuration
 │   ├── config.py         # Application settings
 │   ├── hateoas.py        # HATEOAS link generation
+│   ├── services/
+│   │   └── kafka_producer.py  # Kafka notification producer
 │   └── routers/
 │       ├── users.py      # User endpoints
-│       └── games.py      # Game endpoints
+│       ├── games.py      # Game endpoints
+│       └── trade_offers.py  # Trade offer endpoints
+├── email_service/
+│   ├── Dockerfile        # Email service container
+│   ├── consumer.py       # Kafka consumer & email sender
+│   └── requirements.txt  # Email service dependencies
+├── nginx/
+│   ├── Dockerfile        # NGINX container
+│   └── nginx.conf        # Load balancer configuration
+├── docker-compose.yml    # Multi-container orchestration
 ├── postman_collection.json
 ├── requirements.txt
 ├── run.py

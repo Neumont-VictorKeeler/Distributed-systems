@@ -5,6 +5,7 @@ from app.database import get_db
 from app.models import TradeOffer, VideoGame, User, TradeOfferStatus
 from app.schemas import TradeOfferCreate, TradeOfferResponse, TradeOfferCollection
 from app.hateoas import add_trade_offer_links, add_collection_links
+from app.services.kafka_producer import notification_producer
 
 router = APIRouter(prefix="/trade-offers", tags=["trade-offers"])
 
@@ -64,10 +65,22 @@ def create_trade_offer(
     db.add(db_trade_offer)
     db.commit()
     db.refresh(db_trade_offer)
-    
+
+    offerer = db.query(User).filter(User.id == offered_game.owner_id).first()
+    receiver = db.query(User).filter(User.id == requested_game.owner_id).first()
+
+    notification_producer.send_notification("trade_offer_created", {
+        "offerer_email": offerer.email,
+        "offerer_name": offerer.name,
+        "receiver_email": receiver.email,
+        "receiver_name": receiver.name,
+        "offered_game": offered_game.name,
+        "requested_game": requested_game.name
+    })
+
     response = TradeOfferResponse.model_validate(db_trade_offer)
     response.links = add_trade_offer_links(request, db_trade_offer.id, db_trade_offer.offerer_id, db_trade_offer.receiver_id)
-    
+
     return response
 
 
@@ -202,6 +215,20 @@ def accept_trade_offer(
     db.commit()
     db.refresh(trade_offer)
 
+    offered_game = db.query(VideoGame).filter(VideoGame.id == trade_offer.offered_game_id).first()
+    requested_game = db.query(VideoGame).filter(VideoGame.id == trade_offer.requested_game_id).first()
+    offerer = db.query(User).filter(User.id == trade_offer.offerer_id).first()
+    receiver = db.query(User).filter(User.id == trade_offer.receiver_id).first()
+
+    notification_producer.send_notification("trade_offer_accepted", {
+        "offerer_email": offerer.email,
+        "offerer_name": offerer.name,
+        "receiver_email": receiver.email,
+        "receiver_name": receiver.name,
+        "offered_game": offered_game.name,
+        "requested_game": requested_game.name
+    })
+
     response = TradeOfferResponse.model_validate(trade_offer)
     response.links = add_trade_offer_links(request, trade_offer.id, trade_offer.offerer_id, trade_offer.receiver_id)
 
@@ -230,6 +257,20 @@ def reject_trade_offer(
     trade_offer.status = TradeOfferStatus.REJECTED
     db.commit()
     db.refresh(trade_offer)
+
+    offered_game = db.query(VideoGame).filter(VideoGame.id == trade_offer.offered_game_id).first()
+    requested_game = db.query(VideoGame).filter(VideoGame.id == trade_offer.requested_game_id).first()
+    offerer = db.query(User).filter(User.id == trade_offer.offerer_id).first()
+    receiver = db.query(User).filter(User.id == trade_offer.receiver_id).first()
+
+    notification_producer.send_notification("trade_offer_rejected", {
+        "offerer_email": offerer.email,
+        "offerer_name": offerer.name,
+        "receiver_email": receiver.email,
+        "receiver_name": receiver.name,
+        "offered_game": offered_game.name,
+        "requested_game": requested_game.name
+    })
 
     response = TradeOfferResponse.model_validate(trade_offer)
     response.links = add_trade_offer_links(request, trade_offer.id, trade_offer.offerer_id, trade_offer.receiver_id)

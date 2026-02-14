@@ -134,6 +134,29 @@
 						"description": "Get all games owned by a specific user"
 					},
 					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"new_password\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/1/password",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1", "password"]
+						},
+						"description": "Change user's password. Triggers email notification."
+					},
+					"response": []
 				}
 			]
 		},
