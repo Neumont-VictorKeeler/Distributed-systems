@@ -16,67 +16,113 @@ try {
 }
 
 Write-Host ""
-Write-Host "[2/6] Creating Test Users..." -ForegroundColor Yellow
-try {
-    $user1 = @{
-        name = "Alice Johnson"
-        email = "alice@example.com"
-        password = "password123"
-        street_address = "123 Main St, City, State 12345"
-    } | ConvertTo-Json
+Write-Host "[2/6] Getting/Creating Test Users..." -ForegroundColor Yellow
+$usersResponse = Invoke-RestMethod -Uri "$baseUrl/users" -Method Get
+$allUsers = $usersResponse.items
 
-    $user2 = @{
-        name = "Bob Smith"
-        email = "bob@example.com"
-        password = "password456"
-        street_address = "456 Oak Ave, City, State 12345"
-    } | ConvertTo-Json
+$userId1 = $null
+$userId2 = $null
 
-    $response1 = Invoke-RestMethod -Uri "$baseUrl/users" -Method Post -Body $user1 -ContentType "application/json"
-    $response2 = Invoke-RestMethod -Uri "$baseUrl/users" -Method Post -Body $user2 -ContentType "application/json"
-    
-    $userId1 = $response1.id
-    $userId2 = $response2.id
-    
-    Write-Host "[OK] Created User 1 (ID: $userId1) - Alice" -ForegroundColor Green
-    Write-Host "[OK] Created User 2 (ID: $userId2) - Bob" -ForegroundColor Green
-} catch {
-    Write-Host "[ERROR] Failed to create users: $_" -ForegroundColor Red
-    exit 1
+foreach ($user in $allUsers) {
+    if ($user.email -eq "alice@example.com") {
+        $userId1 = $user.id
+        Write-Host "[OK] Found existing User 1 (ID: $userId1) - Alice" -ForegroundColor Green
+    }
+    if ($user.email -eq "bob@example.com") {
+        $userId2 = $user.id
+        Write-Host "[OK] Found existing User 2 (ID: $userId2) - Bob" -ForegroundColor Green
+    }
+}
+
+if (-not $userId1) {
+    try {
+        $user1 = @{
+            name = "Alice Johnson"
+            email = "alice@example.com"
+            password = "password123"
+            street_address = "123 Main St, City, State 12345"
+        } | ConvertTo-Json
+        $response1 = Invoke-RestMethod -Uri "$baseUrl/users" -Method Post -Body $user1 -ContentType "application/json"
+        $userId1 = $response1.id
+        Write-Host "[OK] Created User 1 (ID: $userId1) - Alice" -ForegroundColor Green
+    } catch {
+        Write-Host "[ERROR] Failed to create Alice: $_" -ForegroundColor Red
+        exit 1
+    }
+}
+
+if (-not $userId2) {
+    try {
+        $user2 = @{
+            name = "Bob Smith"
+            email = "bob@example.com"
+            password = "password456"
+            street_address = "456 Oak Ave, City, State 12345"
+        } | ConvertTo-Json
+        $response2 = Invoke-RestMethod -Uri "$baseUrl/users" -Method Post -Body $user2 -ContentType "application/json"
+        $userId2 = $response2.id
+        Write-Host "[OK] Created User 2 (ID: $userId2) - Bob" -ForegroundColor Green
+    } catch {
+        Write-Host "[ERROR] Failed to create Bob: $_" -ForegroundColor Red
+        exit 1
+    }
 }
 
 Write-Host ""
-Write-Host "[3/6] Creating Test Games..." -ForegroundColor Yellow
-try {
-    $game1 = @{
-        name = "The Legend of Zelda"
-        publisher = "Nintendo"
-        year_published = 1986
-        gaming_system = "NES"
-        condition = "good"
-        previous_owners = 2
-    } | ConvertTo-Json
+Write-Host "[3/6] Getting/Creating Test Games..." -ForegroundColor Yellow
+$gamesResponse = Invoke-RestMethod -Uri "$baseUrl/games" -Method Get
+$allGames = $gamesResponse.items
 
-    $game2 = @{
-        name = "Super Mario Bros"
-        publisher = "Nintendo"
-        year_published = 1985
-        gaming_system = "NES"
-        condition = "mint"
-        previous_owners = 0
-    } | ConvertTo-Json
+$gameId1 = $null
+$gameId2 = $null
 
-    $response1 = Invoke-RestMethod -Uri "$baseUrl/games?owner_id=$userId1" -Method Post -Body $game1 -ContentType "application/json"
-    $response2 = Invoke-RestMethod -Uri "$baseUrl/games?owner_id=$userId2" -Method Post -Body $game2 -ContentType "application/json"
-    
-    $gameId1 = $response1.id
-    $gameId2 = $response2.id
-    
-    Write-Host "[OK] Created Game 1 (ID: $gameId1) - Zelda (owned by Alice)" -ForegroundColor Green
-    Write-Host "[OK] Created Game 2 (ID: $gameId2) - Mario (owned by Bob)" -ForegroundColor Green
-} catch {
-    Write-Host "[ERROR] Failed to create games: $_" -ForegroundColor Red
-    exit 1
+foreach ($game in $allGames) {
+    if ($game.name -eq "The Legend of Zelda" -and $game.owner_id -eq $userId1) {
+        $gameId1 = $game.id
+        Write-Host "[OK] Found existing Game 1 (ID: $gameId1) - Zelda (owned by Alice)" -ForegroundColor Green
+    }
+    if ($game.name -eq "Super Mario Bros" -and $game.owner_id -eq $userId2) {
+        $gameId2 = $game.id
+        Write-Host "[OK] Found existing Game 2 (ID: $gameId2) - Mario (owned by Bob)" -ForegroundColor Green
+    }
+}
+
+if (-not $gameId1) {
+    try {
+        $game1 = @{
+            name = "The Legend of Zelda"
+            publisher = "Nintendo"
+            year_published = 1986
+            gaming_system = "NES"
+            condition = "good"
+            previous_owners = 2
+        } | ConvertTo-Json
+        $response1 = Invoke-RestMethod -Uri "$baseUrl/games?owner_id=$userId1" -Method Post -Body $game1 -ContentType "application/json"
+        $gameId1 = $response1.id
+        Write-Host "[OK] Created Game 1 (ID: $gameId1) - Zelda (owned by Alice)" -ForegroundColor Green
+    } catch {
+        Write-Host "[ERROR] Failed to create Zelda: $_" -ForegroundColor Red
+        exit 1
+    }
+}
+
+if (-not $gameId2) {
+    try {
+        $game2 = @{
+            name = "Super Mario Bros"
+            publisher = "Nintendo"
+            year_published = 1985
+            gaming_system = "NES"
+            condition = "mint"
+            previous_owners = 0
+        } | ConvertTo-Json
+        $response2 = Invoke-RestMethod -Uri "$baseUrl/games?owner_id=$userId2" -Method Post -Body $game2 -ContentType "application/json"
+        $gameId2 = $response2.id
+        Write-Host "[OK] Created Game 2 (ID: $gameId2) - Mario (owned by Bob)" -ForegroundColor Green
+    } catch {
+        Write-Host "[ERROR] Failed to create Mario: $_" -ForegroundColor Red
+        exit 1
+    }
 }
 
 Write-Host ""

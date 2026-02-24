@@ -1,13 +1,15 @@
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 from app.routers import users, games, trade_offers
 from app.database import engine, Base
 from app.schemas import ErrorResponse
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 import os
 import logging
+import time
 
 logging.basicConfig(
     level=logging.INFO,
@@ -18,6 +20,24 @@ logger = logging.getLogger(__name__)
 INSTANCE_NAME = os.getenv("INSTANCE_NAME", "UNKNOWN")
 
 Base.metadata.create_all(bind=engine)
+
+REQUEST_COUNT = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status', 'instance']
+)
+
+REQUEST_DURATION = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request duration in seconds',
+    ['method', 'endpoint', 'instance']
+)
+
+ACTIVE_REQUESTS = Gauge(
+    'http_requests_active',
+    'Number of active HTTP requests',
+    ['instance']
+)
 
 app = FastAPI(
     title="Video Game Trading API",
@@ -39,8 +59,29 @@ app.add_middleware(
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    ACTIVE_REQUESTS.labels(instance=INSTANCE_NAME).inc()
+    start_time = time.time()
+
     logger.info(f"[{INSTANCE_NAME}] {request.method} {request.url.path}")
     response = await call_next(request)
+
+    duration = time.time() - start_time
+
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status=response.status_code,
+        instance=INSTANCE_NAME
+    ).inc()
+
+    REQUEST_DURATION.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        instance=INSTANCE_NAME
+    ).observe(duration)
+
+    ACTIVE_REQUESTS.labels(instance=INSTANCE_NAME).dec()
+
     logger.info(f"[{INSTANCE_NAME}] {request.method} {request.url.path} - Status: {response.status_code}")
     response.headers["X-Instance-Name"] = INSTANCE_NAME
     return response
@@ -49,6 +90,11 @@ async def log_requests(request: Request, call_next):
 app.include_router(users.router)
 app.include_router(games.router)
 app.include_router(trade_offers.router)
+
+
+@app.get("/metrics", tags=["monitoring"])
+def metrics():
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/", tags=["root"])
