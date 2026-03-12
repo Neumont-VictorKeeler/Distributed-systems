@@ -7,6 +7,7 @@ from app.models import User, VideoGame
 from app.schemas import UserCreate, UserUpdate, UserResponse, UserCollection, VideoGameResponse, VideoGameCollection
 from app.hateoas import add_user_links, add_collection_links, add_game_links
 from app.services.kafka_producer import notification_producer
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -137,12 +138,20 @@ def get_user_games(
 
 
 @router.put("/{user_id}/password", response_model=UserResponse)
-def change_password(
+async def change_password(
     user_id: int,
     password_change: PasswordChange,
     request: Request,
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # Verify the user is changing their own password
+    if current_user["id"] != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only change your own password"
+        )
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(

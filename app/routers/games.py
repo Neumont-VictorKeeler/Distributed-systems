@@ -5,17 +5,21 @@ from app.database import get_db
 from app.models import User, VideoGame
 from app.schemas import VideoGameCreate, VideoGameUpdate, VideoGameResponse, VideoGameCollection
 from app.hateoas import add_game_links, add_collection_links
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/games", tags=["games"])
 
 
 @router.post("", response_model=VideoGameResponse, status_code=status.HTTP_201_CREATED)
-def create_game(
+async def create_game(
     game: VideoGameCreate,
-    owner_id: int,
     request: Request,
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # Use the authenticated user's ID as the owner
+    owner_id = current_user["id"]
+
     owner = db.query(User).filter(User.id == owner_id).first()
     if not owner:
         raise HTTPException(

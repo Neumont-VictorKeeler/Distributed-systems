@@ -5,9 +5,10 @@ global:
     monitor: 'videogame-trading-monitor'
 
 scrape_configs:
+
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['prometheus:9090']
         labels:
           service: 'prometheus'
 
@@ -24,3 +25,17 @@ scrape_configs:
         labels:
           service: 'nginx'
           role: 'load-balancer'
+
+  - job_name: 'kafka-exporter'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+        labels:
+          service: 'kafka'
+          exporter: 'kafka-exporter'
+
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:8001']
+        labels:
+          service: 'auth-service'
+          environment: 'production'
